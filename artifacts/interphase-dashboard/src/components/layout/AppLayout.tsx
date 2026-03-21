@@ -68,7 +68,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <div className="w-4 h-4 border-2 border-primary-foreground rounded-sm" />
               </div>
               <span className="font-bold text-base tracking-tight truncate group-data-[collapsible=icon]:hidden">
-                Interphase
+                Interphase Engineers
               </span>
             </div>
           </SidebarHeader>
