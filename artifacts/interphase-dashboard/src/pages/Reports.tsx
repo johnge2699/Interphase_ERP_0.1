@@ -148,17 +148,19 @@ export default function Reports() {
       ]);
       downloadCSV(`interphase_estimates_${selectedProject?.projectName ?? "export"}.csv`, headers, rows as any);
     } else if (activeTab === "consumption") {
-      const headers = ["Week #", "Week Range", "Item", "Est. Qty", "Actual Qty", "Variance", "Variance %", "Unit Cost (₹)", "Actual Cost (₹)", "Notes"];
+      const headers = ["Week #", "Week Range", "Item", "Est. Qty", "Actual Qty", "Returned Qty", "Net Qty", "Variance %", "Unit Cost (₹)", "Actual Cost (₹)", "Net Cost (₹)", "Notes"];
       const rows = (consumption as any[]).map((c: any) => [
         c.weekNumber,
         `${c.weekStart} to ${c.weekEnd}`,
         c.itemName,
         c.estimatedQty,
         c.actualQty,
-        c.variance,
+        c.returnedQty ?? 0,
+        c.netQty ?? c.actualQty,
         fmtNum(c.variancePercent) + "%",
         c.unitCost,
         c.actualCost,
+        c.netCost ?? c.actualCost,
         c.notes ?? "",
       ]);
       downloadCSV(`interphase_consumption_${selectedProject?.projectName ?? "export"}.csv`, headers, rows as any);
@@ -384,18 +386,20 @@ export default function Reports() {
                       <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">Item</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Est. Qty</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actual Qty</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Variance</th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold text-emerald-700 uppercase tracking-wide">Ret. Qty</th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Net Qty</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Var %</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Unit Cost</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wide">Actual Cost</th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold text-emerald-700 uppercase tracking-wide bg-emerald-500/5">Net Cost</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">
                     {consumptionLoading ? (
-                      <TableSkeleton rows={5} cols={9} />
+                      <TableSkeleton rows={5} cols={11} />
                     ) : (consumption as any[]).length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-5 py-10 text-center text-muted-foreground">
+                        <td colSpan={11} className="px-5 py-10 text-center text-muted-foreground">
                           No consumption entries recorded yet for this project.
                         </td>
                       </tr>
@@ -403,6 +407,7 @@ export default function Reports() {
                       (consumption as any[]).map((c: any, i: number) => {
                         const isOver = c.variancePercent < -5;
                         const isUnder = c.variancePercent > 5;
+                        const hasReturn = (c.returnedQty ?? 0) > 0;
                         return (
                           <tr key={c.id} className={`hover:bg-secondary/20 transition-colors ${i % 2 === 0 ? "bg-card" : "bg-secondary/5"}`}>
                             <td className="px-5 py-2.5 font-medium text-muted-foreground">W{c.weekNumber}</td>
@@ -410,14 +415,20 @@ export default function Reports() {
                             <td className="px-5 py-2.5 font-medium">{c.itemName}</td>
                             <td className="px-5 py-2.5 text-right tabular-nums">{Number(c.estimatedQty).toLocaleString("en-IN")}</td>
                             <td className="px-5 py-2.5 text-right tabular-nums">{Number(c.actualQty).toLocaleString("en-IN")}</td>
-                            <td className={`px-5 py-2.5 text-right tabular-nums font-medium ${isOver ? "text-destructive" : isUnder ? "text-emerald-600" : "text-foreground"}`}>
-                              {c.variance > 0 ? "+" : ""}{Number(c.variance).toLocaleString("en-IN")}
+                            <td className="px-5 py-2.5 text-right tabular-nums text-emerald-700 font-medium">
+                              {hasReturn ? Number(c.returnedQty).toLocaleString("en-IN") : <span className="text-muted-foreground/40">—</span>}
+                            </td>
+                            <td className="px-5 py-2.5 text-right tabular-nums font-medium">
+                              {Number(c.netQty ?? c.actualQty).toLocaleString("en-IN")}
                             </td>
                             <td className={`px-5 py-2.5 text-right tabular-nums text-xs font-semibold ${isOver ? "text-destructive" : isUnder ? "text-emerald-600" : "text-muted-foreground"}`}>
                               {c.variance > 0 ? "+" : ""}{fmtNum(c.variancePercent)}%
                             </td>
                             <td className="px-5 py-2.5 text-right tabular-nums text-muted-foreground">{fmt(c.unitCost)}</td>
-                            <td className={`px-5 py-2.5 text-right tabular-nums font-semibold ${isOver ? "text-destructive" : ""}`}>{fmt(c.actualCost)}</td>
+                            <td className="px-5 py-2.5 text-right tabular-nums text-muted-foreground">{fmt(c.actualCost)}</td>
+                            <td className={`px-5 py-2.5 text-right tabular-nums font-semibold bg-emerald-500/5 ${hasReturn ? "text-emerald-700" : "text-foreground"}`}>
+                              {fmt(c.netCost ?? c.actualCost)}
+                            </td>
                           </tr>
                         );
                       })
@@ -425,11 +436,14 @@ export default function Reports() {
                   </tbody>
                   <tfoot className="bg-secondary/30 border-t border-border/60">
                     <tr>
-                      <td colSpan={8} className="px-5 py-3 text-xs font-semibold text-muted-foreground uppercase">
-                        Total Actual Cost
+                      <td colSpan={9} className="px-5 py-3 text-xs font-semibold text-muted-foreground uppercase">
+                        Total
                       </td>
-                      <td className="px-5 py-3 text-right tabular-nums font-bold text-foreground">
+                      <td className="px-5 py-3 text-right tabular-nums font-semibold text-muted-foreground">
                         {fmt((consumption as any[]).reduce((s: number, c: any) => s + (c.actualCost || 0), 0))}
+                      </td>
+                      <td className="px-5 py-3 text-right tabular-nums font-bold text-emerald-700 bg-emerald-500/5">
+                        {fmt((consumption as any[]).reduce((s: number, c: any) => s + ((c.netCost ?? c.actualCost) || 0), 0))}
                       </td>
                     </tr>
                   </tfoot>

@@ -14,6 +14,7 @@ export const consumptionTable = pgTable("consumption", {
   itemName: text("item_name").notNull(),
   estimatedQty: numeric("estimated_qty", { precision: 12, scale: 3 }).notNull().default("0"),
   actualQty: numeric("actual_qty", { precision: 12, scale: 3 }).notNull().default("0"),
+  returnedQty: numeric("returned_qty", { precision: 12, scale: 3 }).notNull().default("0"),
   unitCost: numeric("unit_cost", { precision: 12, scale: 2 }).notNull().default("0"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

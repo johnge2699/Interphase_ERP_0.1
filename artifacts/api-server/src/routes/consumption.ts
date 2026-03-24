@@ -5,6 +5,28 @@ import { eq, and, sql } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+function computeFields(r: typeof consumptionTable.$inferSelect) {
+  const estQty = parseFloat(r.estimatedQty);
+  const actQty = parseFloat(r.actualQty);
+  const retQty = parseFloat(r.returnedQty ?? "0");
+  const unitCost = parseFloat(r.unitCost);
+  const netQty = actQty - retQty;
+  const variance = estQty - actQty;
+  const variancePercent = estQty > 0 ? (variance / estQty) * 100 : 0;
+  return {
+    ...r,
+    estimatedQty: estQty,
+    actualQty: actQty,
+    returnedQty: retQty,
+    netQty,
+    unitCost,
+    variance,
+    variancePercent,
+    actualCost: actQty * unitCost,
+    netCost: netQty * unitCost,
+  };
+}
+
 router.get("/", async (req, res) => {
   try {
     const { projectId, weekNumber } = req.query as { projectId?: string; weekNumber?: string };
@@ -26,24 +48,7 @@ router.get("/", async (req, res) => {
       .where(conditions)
       .orderBy(sql`${consumptionTable.weekNumber} asc, ${consumptionTable.createdAt} asc`);
 
-    res.json(
-      rows.map((r) => {
-        const estQty = parseFloat(r.estimatedQty);
-        const actQty = parseFloat(r.actualQty);
-        const unitCost = parseFloat(r.unitCost);
-        const variance = estQty - actQty;
-        const variancePercent = estQty > 0 ? (variance / estQty) * 100 : 0;
-        return {
-          ...r,
-          estimatedQty: estQty,
-          actualQty: actQty,
-          unitCost,
-          variance,
-          variancePercent,
-          actualCost: actQty * unitCost,
-        };
-      })
-    );
+    res.json(rows.map(computeFields));
   } catch (err) {
     req.log.error({ err }, "Failed to list consumption entries");
     res.status(500).json({ error: "server_error", message: "Failed to list consumption entries" });
@@ -63,23 +68,12 @@ router.post("/", async (req, res) => {
         itemName: body.itemName,
         estimatedQty: String(body.estimatedQty ?? 0),
         actualQty: String(body.actualQty ?? 0),
+        returnedQty: String(body.returnedQty ?? 0),
         unitCost: String(body.unitCost ?? 0),
         notes: body.notes || null,
       })
       .returning();
-    const estQty = parseFloat(row.estimatedQty);
-    const actQty = parseFloat(row.actualQty);
-    const unitCost = parseFloat(row.unitCost);
-    const variance = estQty - actQty;
-    res.status(201).json({
-      ...row,
-      estimatedQty: estQty,
-      actualQty: actQty,
-      unitCost,
-      variance,
-      variancePercent: estQty > 0 ? (variance / estQty) * 100 : 0,
-      actualCost: actQty * unitCost,
-    });
+    res.status(201).json(computeFields(row));
   } catch (err) {
     req.log.error({ err }, "Failed to create consumption entry");
     res.status(400).json({ error: "validation_error", message: "Failed to create consumption entry" });
@@ -100,6 +94,7 @@ router.put("/:id", async (req, res) => {
         itemName: body.itemName,
         estimatedQty: String(body.estimatedQty ?? 0),
         actualQty: String(body.actualQty ?? 0),
+        returnedQty: String(body.returnedQty ?? 0),
         unitCost: String(body.unitCost ?? 0),
         notes: body.notes || null,
         updatedAt: new Date(),
@@ -109,19 +104,7 @@ router.put("/:id", async (req, res) => {
     if (!row) {
       return res.status(404).json({ error: "not_found", message: "Consumption entry not found" });
     }
-    const estQty = parseFloat(row.estimatedQty);
-    const actQty = parseFloat(row.actualQty);
-    const unitCost = parseFloat(row.unitCost);
-    const variance = estQty - actQty;
-    res.json({
-      ...row,
-      estimatedQty: estQty,
-      actualQty: actQty,
-      unitCost,
-      variance,
-      variancePercent: estQty > 0 ? (variance / estQty) * 100 : 0,
-      actualCost: actQty * unitCost,
-    });
+    res.json(computeFields(row));
   } catch (err) {
     req.log.error({ err }, "Failed to update consumption entry");
     res.status(400).json({ error: "validation_error", message: "Failed to update consumption entry" });

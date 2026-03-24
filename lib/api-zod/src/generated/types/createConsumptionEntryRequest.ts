@@ -17,6 +17,11 @@ export interface CreateConsumptionEntryRequest {
   estimatedQty: number;
   /** @minimum 0 */
   actualQty: number;
+  /**
+   * Quantity returned at end of project
+   * @minimum 0
+   */
+  returnedQty: number;
   /** @minimum 0 */
   unitCost: number;
   notes?: string;

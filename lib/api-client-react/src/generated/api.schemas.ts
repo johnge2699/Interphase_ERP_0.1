@@ -145,10 +145,16 @@ export interface ConsumptionEntry {
   itemName: string;
   estimatedQty: number;
   actualQty: number;
+  /** Quantity returned after project completion */
+  returnedQty: number;
+  /** actualQty minus returnedQty — the quantity consumed net of returns */
+  netQty: number;
   variance: number;
   variancePercent: number;
   unitCost: number;
   actualCost: number;
+  /** netQty × unitCost — the accurate cost after accounting for returned material */
+  netCost: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -165,6 +171,11 @@ export interface CreateConsumptionEntryRequest {
   estimatedQty: number;
   /** @minimum 0 */
   actualQty: number;
+  /**
+   * Quantity returned at end of project
+   * @minimum 0
+   */
+  returnedQty: number;
   /** @minimum 0 */
   unitCost: number;
   notes?: string;

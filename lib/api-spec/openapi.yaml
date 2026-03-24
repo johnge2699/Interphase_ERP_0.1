@@ -677,6 +677,14 @@ components:
         actualQty:
           type: number
           format: double
+        returnedQty:
+          type: number
+          format: double
+          description: Quantity returned after project completion
+        netQty:
+          type: number
+          format: double
+          description: actualQty minus returnedQty — the quantity consumed net of returns
         variance:
           type: number
           format: double
@@ -689,6 +697,10 @@ components:
         actualCost:
           type: number
           format: double
+        netCost:
+          type: number
+          format: double
+          description: netQty × unitCost — the accurate cost after accounting for returned material
         notes:
           type: string
         createdAt:
@@ -706,10 +718,13 @@ components:
         - itemName
         - estimatedQty
         - actualQty
+        - returnedQty
+        - netQty
         - variance
         - variancePercent
         - unitCost
         - actualCost
+        - netCost
         - createdAt
         - updatedAt
 
@@ -737,6 +752,11 @@ components:
           type: number
           format: double
           minimum: 0
+        returnedQty:
+          type: number
+          format: double
+          minimum: 0
+          description: Quantity returned at end of project
         unitCost:
           type: number
           format: double
@@ -751,6 +771,7 @@ components:
         - itemName
         - estimatedQty
         - actualQty
+        - returnedQty
         - unitCost
 
     MarginReport:

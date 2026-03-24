@@ -291,10 +291,23 @@ export const ListConsumptionResponseItem = zod.object({
   itemName: zod.string(),
   estimatedQty: zod.number(),
   actualQty: zod.number(),
+  returnedQty: zod
+    .number()
+    .describe("Quantity returned after project completion"),
+  netQty: zod
+    .number()
+    .describe(
+      "actualQty minus returnedQty — the quantity consumed net of returns",
+    ),
   variance: zod.number(),
   variancePercent: zod.number(),
   unitCost: zod.number(),
   actualCost: zod.number(),
+  netCost: zod
+    .number()
+    .describe(
+      "netQty × unitCost — the accurate cost after accounting for returned material",
+    ),
   notes: zod.string().optional(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
@@ -309,6 +322,8 @@ export const createConsumptionEntryBodyEstimatedQtyMin = 0;
 
 export const createConsumptionEntryBodyActualQtyMin = 0;
 
+export const createConsumptionEntryBodyReturnedQtyMin = 0;
+
 export const createConsumptionEntryBodyUnitCostMin = 0;
 
 export const CreateConsumptionEntryBody = zod.object({
@@ -319,6 +334,10 @@ export const CreateConsumptionEntryBody = zod.object({
   itemName: zod.string().min(1),
   estimatedQty: zod.number().min(createConsumptionEntryBodyEstimatedQtyMin),
   actualQty: zod.number().min(createConsumptionEntryBodyActualQtyMin),
+  returnedQty: zod
+    .number()
+    .min(createConsumptionEntryBodyReturnedQtyMin)
+    .describe("Quantity returned at end of project"),
   unitCost: zod.number().min(createConsumptionEntryBodyUnitCostMin),
   notes: zod.string().optional(),
 });
@@ -334,6 +353,8 @@ export const updateConsumptionEntryBodyEstimatedQtyMin = 0;
 
 export const updateConsumptionEntryBodyActualQtyMin = 0;
 
+export const updateConsumptionEntryBodyReturnedQtyMin = 0;
+
 export const updateConsumptionEntryBodyUnitCostMin = 0;
 
 export const UpdateConsumptionEntryBody = zod.object({
@@ -344,6 +365,10 @@ export const UpdateConsumptionEntryBody = zod.object({
   itemName: zod.string().min(1),
   estimatedQty: zod.number().min(updateConsumptionEntryBodyEstimatedQtyMin),
   actualQty: zod.number().min(updateConsumptionEntryBodyActualQtyMin),
+  returnedQty: zod
+    .number()
+    .min(updateConsumptionEntryBodyReturnedQtyMin)
+    .describe("Quantity returned at end of project"),
   unitCost: zod.number().min(updateConsumptionEntryBodyUnitCostMin),
   notes: zod.string().optional(),
 });
@@ -357,10 +382,23 @@ export const UpdateConsumptionEntryResponse = zod.object({
   itemName: zod.string(),
   estimatedQty: zod.number(),
   actualQty: zod.number(),
+  returnedQty: zod
+    .number()
+    .describe("Quantity returned after project completion"),
+  netQty: zod
+    .number()
+    .describe(
+      "actualQty minus returnedQty — the quantity consumed net of returns",
+    ),
   variance: zod.number(),
   variancePercent: zod.number(),
   unitCost: zod.number(),
   actualCost: zod.number(),
+  netCost: zod
+    .number()
+    .describe(
+      "netQty × unitCost — the accurate cost after accounting for returned material",
+    ),
   notes: zod.string().optional(),
   createdAt: zod.date(),
   updatedAt: zod.date(),
