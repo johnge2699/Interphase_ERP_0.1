@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Interphase Engineers - Project Control Dashboard"
+version = "1.0.0"
+id = "artifacts/interphase-dashboard"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23065
+
+[services.development]
+run = "pnpm --filter @workspace/interphase-dashboard run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/interphase-dashboard", "run", "build" ]
+publicDir = "artifacts/interphase-dashboard/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23065"
+BASE_PATH = "/"
